@@ -8,20 +8,20 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State private var redSliderValue = Double.random(in: 0...255)
-    @State private var greenSliderValue = Double.random(in: 0...255)
-    @State private var blueSliderValue = Double.random(in: 0...255)
-    
+    @State private var redSliderValue: Double = 0
+    @State private var greenSliderValue: Double = 0
+    @State private var blueSliderValue: Double = 0
+    @State private var alertPresented = false
     
     var body: some View {
         ZStack {
             Color.orange.ignoresSafeArea()
             VStack {
-                ColorView(red: 0.5, blue: 0.3, green: 0.2, opacity: 2)
+                ColorView(red: $redSliderValue, blue: $greenSliderValue, green: $blueSliderValue, opacity: 2)
                     .padding()
-                ColorSlider(value: $redSliderValue, color: .red)
-                ColorSlider(value: $greenSliderValue, color: .green)
-                ColorSlider(value: $blueSliderValue, color: .blue)
+                ColorSlider(value: $redSliderValue, alertPresented: $alertPresented, color: .red)
+                ColorSlider(value: $greenSliderValue, alertPresented: $alertPresented, color: .green)
+                ColorSlider(value: $blueSliderValue, alertPresented: $alertPresented, color: .blue)
                 Spacer()
             }
         }
@@ -35,6 +35,7 @@ struct ContentView_Previews: PreviewProvider {
 }
 struct ColorSlider: View {
     @Binding var value: Double
+    @Binding var alertPresented: Bool
     
     let color: Color
     
@@ -44,12 +45,23 @@ struct ColorSlider: View {
                 .frame(width: 40)
             Slider(value: $value, in: 0...255, step: 1)
                 .accentColor(color)
-            TextField("", value: $value, formatter: NumberFormatter())
-                .bordered()
-                .multilineTextAlignment(TextAlignment.center)
-                .background(Color.white)
-                .frame(width: 63, height: 35, alignment: .center)
-                
+            TextField("", value: $value, formatter: NumberFormatter(), onCommit: {
+                if 0...255 ~= value {
+                    return
+                } else {
+                    alertPresented.toggle()
+                    value = 0
+                }
+                })
+            .bordered()
+            .disableAutocorrection(true)
+            .textContentType(.oneTimeCode)
+            .multilineTextAlignment(TextAlignment.center)
+            .background(Color.white)
+            .frame(width: 63, height: 35, alignment: .center)
+            .alert(isPresented: $alertPresented, content: {
+                Alert(title: Text("Wrong Format"), message: Text("Please enter another"))
+            })
         }
         .padding(.horizontal)
     }
